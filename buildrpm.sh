@@ -51,7 +51,7 @@ read build
 # Variables
 url="http://gec-maven-nexus.walmart.com/nexus/content/repositories/inkiru_releases/ink_sprint$sprint/$build/"
 lst=( $(wget -qO- $url | grep -oE "\"http://.*.jar\"" | tr -d '"') )
-rpmroot="/root/rpmbuild"
+rpmroot="$HOME/rpmbuild"
 repodir="/var/www/html/repos/inkiru/$sprint-$build"
 numbuilds=6
 
@@ -100,6 +100,7 @@ install -m 0755 $filename \$RPM_BUILD_ROOT/home/inkadmin/inkiru/lib/$filename
 rm -rf \$RPM_BUILD_ROOT
 %post
 %files
+%defattr(755,inkadmin,inkadmin)
 %dir /home/inkadmin/inkiru/lib/
 /home/inkadmin/inkiru/lib/$filename
 EOF
@@ -111,8 +112,14 @@ rpmbuild -ba /tmp/$filewithoutext.spec
 
 
 # Copy the rpms to the repositories
-cp -ra $rpmroot/RPMS/noarch/$filewithoutext*noarch.rpm $repodir/
+cp -ra $rpmroot/RPMS/noarch/$filewithoutext-$sprint-$build.noarch.rpm $repodir/
 done
+
+# Creating the repodir if it doesn't exist
+if [ ! -d $repodir ]; then
+  mkdir $repodir
+fi
+
 
 # Cleaning repositories older than 4 builds
 if [ $(find $repodir/../* -maxdepth 0 -type d -print | wc -l) -gt $numbuilds  ] ; then
@@ -122,9 +129,8 @@ fi
 # Initialize the repo with fresh data
 if find "$repodir" -mindepth 1 -print -quit | grep -q .; then
     echo "Updating repository..."
-    createrepo --update $repodir/.
+    createrepo --update $repodir/../.
 else
     echo "This looks like a new repository, initializing it..."
-    mkdir -p $repodir
-    createrepo $repodir/.
+    createrepo $repodir/../.
 fi
