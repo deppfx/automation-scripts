@@ -60,7 +60,6 @@ for i in "${lst[@]}"
 do
 filename=$( echo $i | awk -F "/" '{print $NF}' )
 filewithoutext=$( echo $i | awk -F "/" '{print $NF}' | awk -F "." '{print $1}' )
-
   if [ -a $filename ]
     then rm -f $filename
   fi
@@ -95,14 +94,14 @@ This package installs the $filewithoutext application.
 %build
 %install
 rm -rf %{buildroot}
-install -m 0755 -d \$RPM_BUILD_ROOT/home/inkiru/inkadmin/lib/
-install -m 0755 $filename \$RPM_BUILD_ROOT/home/inkiru/inkadmin/lib/$filename
+install -m 0755 -d \$RPM_BUILD_ROOT/home/inkadmin/inkiru/lib/
+install -m 0755 $filename \$RPM_BUILD_ROOT/home/inkadmin/inkiru/lib/$filename
 %clean
 rm -rf \$RPM_BUILD_ROOT
 %post
 %files
-%dir /home/inkiru/inkadmin/lib/
-/home/inkiru/inkadmin/lib/$filename
+%dir /home/inkadmin/inkiru/lib/
+/home/inkadmin/inkiru/lib/$filename
 EOF
 
 
