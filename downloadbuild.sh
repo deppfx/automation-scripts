@@ -22,16 +22,17 @@ url="http://gec-maven-nexus.walmart.com/nexus/content/repositories/inkiru_releas
 extlibs="extlibs.tar.gz"
 inkkyweb="web.tar.gz"
 jarlist=( $(wget -qO- $url | grep -oE "\"http://.*.jar\"" | tr -d '"') )
-tmpdir="newinkiru"
+tmpdir=$(mktemp -d)
 deploydir=~/inkiru
 inkkydir=~/inkiru/bin/InkkyMain
+light=0
 
 
 # Take user input
 clear
 printf ${yellow}"Enter only the sprint number. Eg: 108 ---> "${reset}
 read sprint
-printf ${yellow}"Enter only the build number. Eg: 12 ---> "${reset}
+printf ${yellow}"Enter only the build number. Eg: 12   ---> "${reset}
 read build
 
 
@@ -52,29 +53,32 @@ proxy_on()
 proxy_off()
 {
     unset http_proxy
-    for i in $(ps aux | grep '[s]sh -4 -fN' | awk '{print $2}'); do kill $i ; done
+    for i in $(ps aux | grep '[s]sh -4 -fN -L 3128' | awk '{print $2}'); do kill $i ; done
 }
 
 
 # Create tmp dir
 mkdir -p ${tmpdir}
 
+# Create dirs if don't exist
+mkdir -p ${deploydir}/lib ${deploydir}/extlibs
+
 # Download
 download()
 {
     local url=${1}
-    echo -n \n${yellow}"Downloading entire directory ${reset}${url}${reset}"\n
+    echo -e "\n${yellow}Downloading entire directory ${reset}${url}${reset}\n"
     wget --progress=bar -r -l1 -nH --cut-dirs=6 --reject="index.html*","*css*","*png*","${build}"  -P ${tmpdir} ${url} 2>&1 | grep Saving
-    echo -ne "\b\b\b\b"
+    echo -e "\b\b\b\b"
     echo "Downloaded ${red}$(ls -1 ${tmpdir}/*| wc -l)${reset} files successfully."
 }
 
-if [ ${ip}=="10.1.25.240" ]; then
-    proxy_on
-    download ${url}
-    proxy_off
+if [ ${ip} == "10.1.25.240" ]; then
+  proxy_on
+  download ${url}
+  proxy_off
 else
-    download ${url}
+  download ${url}
 fi
 
 # Move files to their directories
